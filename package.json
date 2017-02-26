@@ -1,10 +1,10 @@
 {
   "name": "restify-validators",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Custom validators for the Node.JS restify framework.",
   "main": "index.js",
   "dependencies": {
-    "restify": "^4.1.0",
+    "restify": "^4.3.0",
     "tv4": "^1.2.7"
   },
   "devDependencies": {},

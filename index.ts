@@ -1,5 +1,5 @@
 import * as restify from 'restify';
-import {validateMultiple as tv4_validateMultiple} from 'tv4';
+import {ErrorVar, JsonSchema, validateMultiple as tv4_validateMultiple} from 'tv4';
 
 interface IObjectCtor extends ObjectConstructor {
     assign(target: any, ...sources: any[]): any;
@@ -11,7 +11,7 @@ export function has_body(req: restify.Request, res: restify.Response, next: rest
     return next();
 }
 
-export function mk_valid_body_mw(json_schema: tv4.JsonSchema, to_res = true) {
+export function mk_valid_body_mw(json_schema: JsonSchema, to_res = true) {
     return function valid_body(req: restify.Request, res: restify.Response, next: restify.Next) {
         const body_is = tv4_validateMultiple(req.body, json_schema);
         if (!body_is.valid)
@@ -24,7 +24,7 @@ export function mk_valid_body_mw(json_schema: tv4.JsonSchema, to_res = true) {
                     error_message: 'JSON-Schema validation failed',
                     error_metadata: {
                         cls: 'tv4',
-                        errors: body_is['errors'].map(function (error: tv4.ErrorVar) {
+                        errors: body_is['errors'].map(function (error: ErrorVar) {
                             return Object.assign({
                                 code: error.code,
                                 dataPath: error.dataPath,
@@ -32,8 +32,8 @@ export function mk_valid_body_mw(json_schema: tv4.JsonSchema, to_res = true) {
                                 params: error.params,
                                 schemaPath: error.schemaPath,
                                 subErrors: error.subErrors
-                            }, process.env.DEBUG_LEVEL && parseInt(
-                                process.env.DEBUG_LEVEL) > 2 ? {stack: error.stack} : {})
+                            }, process.env['DEBUG_LEVEL'] && parseInt(
+                                process.env['DEBUG_LEVEL']) > 2 ? {stack: error.stack} : {})
                         }),
                         missing: body_is['missing'],
                         valid: body_is['valid']
@@ -44,7 +44,7 @@ export function mk_valid_body_mw(json_schema: tv4.JsonSchema, to_res = true) {
     }
 }
 
-export function mk_valid_body_mw_ignore(json_schema: tv4.JsonSchema, ignore: Array<string>) {
+export function mk_valid_body_mw_ignore(json_schema: JsonSchema, ignore: Array<string>) {
     return function valid_body(req: restify.Request, res: restify.Response, next: restify.Next) {
         if (!req['json_schema_error']) return next();
         ignore.map(
