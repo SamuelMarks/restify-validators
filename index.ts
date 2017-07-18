@@ -1,55 +1,51 @@
+import { GenericError } from 'custom-restify-errors';
 import * as restify from 'restify';
 import { ErrorVar, JsonSchema, validateMultiple as tv4_validateMultiple } from 'tv4';
 
-interface IObjectCtor extends ObjectConstructor {
-    assign(target: any, ...sources: any[]): any;
-}
+export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
+    next(req.body == null ? new GenericError({
+        name: 'ValidationError',
+        error: 'ValidationError',
+        error_message: 'Body required',
+        statusCode: 400
+    }) : void 0);
 
-declare const Object: IObjectCtor;
-
-export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) => {
-    if (!req.body) res.json(400, {error: 'ValidationError', error_message: 'Body required'});
-    return next();
-};
-
-export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) => {
-    return /*valid_body*/(req: restify.Request, res: restify.Response, next: restify.Next) => {
-        const body_is = tv4_validateMultiple(req.body, json_schema);
-        if (!body_is.valid)
-            (error => to_res ? res.json(400, error) : req['json_schema_error'] = error)(
-                body_is.errors.length === 1 ? {
-                    error: 'ValidationError',
-                    error_message: body_is.errors[0]['message']
-                } : {
-                    error: 'ValidationError',
-                    error_message: 'JSON-Schema validation failed',
-                    error_metadata: {
-                        cls: 'tv4',
-                        errors: body_is['errors'].map((error: ErrorVar) =>
-                            Object.assign({
-                                code: error.code,
-                                dataPath: error.dataPath,
-                                message: error.message,
-                                params: error.params,
-                                schemaPath: error.schemaPath,
-                                subErrors: error.subErrors
-                            }, process.env['DEBUG_LEVEL'] && parseInt(
-                                process.env['DEBUG_LEVEL'], 10) > 2 ? {stack: error.stack} : {})
-                        ),
-                        missing: body_is['missing'],
-                        valid: body_is['valid']
-                    }
+export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
+    /*valid_body*/ (req: restify.Request, res: restify.Response, next: restify.Next) => {
+    const body_is = tv4_validateMultiple(req.body, json_schema);
+    if (!body_is.valid)
+        (error => to_res ? res.json(400, error) : req['json_schema_error'] = error)(
+            body_is.errors.length === 1 ? {
+                error: 'ValidationError',
+                error_message: body_is.errors[0].message
+            } : {
+                error: 'ValidationError',
+                error_message: 'JSON-Schema validation failed',
+                error_metadata: {
+                    cls: 'tv4',
+                    errors: body_is['errors'].map((error: ErrorVar) =>
+                        Object.assign({
+                            code: error.code,
+                            dataPath: error.dataPath,
+                            message: error.message,
+                            params: error.params,
+                            schemaPath: error.schemaPath,
+                            subErrors: error.subErrors
+                        }, process.env['DEBUG_LEVEL'] && parseInt(process.env['DEBUG_LEVEL'], 10) > 2 ?
+                            { stack: error.stack } : {})
+                    ),
+                    missing: body_is.missing,
+                    valid: body_is.valid
                 }
-            );
-        return next();
-    };
+            }
+        );
+    return next();
 };
 
 export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[]) => {
     return function valid_body(req: restify.Request, res: restify.Response, next: restify.Next) {
         if (!req['json_schema_error']) return next();
-        ignore.map(
-            filter => {
+        ignore.map(filter => {
                 switch (true) {
                     case req['json_schema_error'].error_message.substr(0, filter.length) === filter:
                         req['json_schema_error'].delete_me = true;
@@ -60,7 +56,7 @@ export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[
                                 error.message.substr(0, filter.length) !== filter
                             );
                         break;
-                    default:
+                    default: /* tslint:disable:no-console */
                         console.warn('Unknown dataset received instead of json_schema_error');
                 }
             }
@@ -74,9 +70,8 @@ export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[
     };
 };
 
-export const remove_from_body = (keys: string[]) => {
-    return (req: restify.Request, res: restify.Response, next: restify.Next) => {
+export const remove_from_body = (keys: string[]) =>
+    (req: restify.Request, res: restify.Response, next: restify.Next) => {
         keys.map(key => req.body && req.body[key] ? delete req.body[key] : null);
         return next();
     };
-};
