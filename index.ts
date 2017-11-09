@@ -14,7 +14,7 @@ export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
     /*valid_body*/ (req: restify.Request, res: restify.Response, next: restify.Next) => {
     const body_is = tv4_validateMultiple(req.body, json_schema);
     if (!body_is.valid)
-        (error => to_res ? res.json(400, error) : req['json_schema_error'] = error)(
+        (error => to_res ? res.json(400, error) && next(false) : req['json_schema_error'] = error)(
             body_is.errors.length === 1 ? {
                 error: 'ValidationError',
                 error_message: body_is.errors[0].message
@@ -39,7 +39,7 @@ export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
                 }
             }
         );
-    return next();
+    else return next();
 };
 
 export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[]) => {
