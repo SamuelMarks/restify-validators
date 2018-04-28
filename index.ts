@@ -1,6 +1,7 @@
 import { GenericError } from 'custom-restify-errors';
 import * as restify from 'restify';
-import { ErrorVar, JsonSchema, validateMultiple as tv4_validateMultiple } from 'tv4';
+import { ErrorVar, JsonSchema, MultiResult, validateMultiple as tv4_validateMultiple } from 'tv4';
+import { CustomJsonError } from 'restify-validators';
 
 export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
     next(req.body == null ? new GenericError({
@@ -10,34 +11,37 @@ export const has_body = (req: restify.Request, res: restify.Response, next: rest
         statusCode: 400
     }) : void 0);
 
+export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError =>
+    body_is.valid ? void 0 : body_is.errors.length === 1 ? {
+        error: 'ValidationError',
+        error_message: body_is.errors[0].message
+    } : {
+        error: 'ValidationError',
+        error_message: 'JSON-Schema validation failed',
+        error_metadata: {
+            cls: 'tv4',
+            errors: body_is['errors'].map((error: ErrorVar) =>
+                Object.assign({
+                    code: error.code,
+                    dataPath: error.dataPath,
+                    message: error.message,
+                    params: error.params,
+                    schemaPath: error.schemaPath,
+                    subErrors: error.subErrors
+                }, process.env['DEBUG_LEVEL'] && parseInt(process.env['DEBUG_LEVEL'], 10) > 2 ?
+                    { stack: error.stack } : {})
+            ),
+            missing: body_is.missing,
+            valid: body_is.valid
+        }
+    };
+
 export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
     /*valid_body*/ (req: restify.Request, res: restify.Response, next: restify.Next) => {
     const body_is = tv4_validateMultiple(req.body, json_schema);
     if (!body_is.valid)
         (error => to_res ? res.json(400, error) && next(false) : req['json_schema_error'] = error)(
-            body_is.errors.length === 1 ? {
-                error: 'ValidationError',
-                error_message: body_is.errors[0].message
-            } : {
-                error: 'ValidationError',
-                error_message: 'JSON-Schema validation failed',
-                error_metadata: {
-                    cls: 'tv4',
-                    errors: body_is['errors'].map((error: ErrorVar) =>
-                        Object.assign({
-                            code: error.code,
-                            dataPath: error.dataPath,
-                            message: error.message,
-                            params: error.params,
-                            schemaPath: error.schemaPath,
-                            subErrors: error.subErrors
-                        }, process.env['DEBUG_LEVEL'] && parseInt(process.env['DEBUG_LEVEL'], 10) > 2 ?
-                            { stack: error.stack } : {})
-                    ),
-                    missing: body_is.missing,
-                    valid: body_is.valid
-                }
-            }
+            jsonSchemaErrorParser(body_is)
         );
     else return next();
 };
