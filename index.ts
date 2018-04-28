@@ -2,6 +2,7 @@ import { GenericError } from 'custom-restify-errors';
 import * as restify from 'restify';
 import { ErrorVar, JsonSchema, MultiResult, validateMultiple as tv4_validateMultiple } from 'tv4';
 import { CustomJsonError } from 'restify-validators';
+import { toSentenceCase } from 'nodejs-utils';
 
 export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
     next(req.body == null ? new GenericError({
@@ -71,6 +72,36 @@ export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[
             delete req['json_schema_error'];
 
         return next();
+    };
+};
+
+export const jsonSchemaNamedArrayOf = (json_schema: tv4.JsonSchema, type_name?: string, type_plural?: string): tv4.JsonSchema => {
+    type_name = type_name || json_schema.title.toString();
+    const upper_of_type = toSentenceCase(type_name);
+    const upper_of_types = toSentenceCase(type_plural || `${type_name}s`);
+    const lower_types = upper_of_types.toLocaleLowerCase();
+    return {
+        $schema: 'http://json-schema.org/draft-06/schema#',
+        $ref: `#/definitions/${upper_of_types}`,
+        definitions: {
+            [upper_of_types]: {
+                type: 'object',
+                additionalProperties: false,
+                properties: {
+                    [lower_types]: {
+                        type: 'array',
+                        items: {
+                            $ref: `#/definitions/${upper_of_type}`
+                        }
+                    }
+                },
+                required: [
+                    lower_types
+                ],
+                title: lower_types
+            },
+            [upper_of_type]: json_schema
+        }
     };
 };
 

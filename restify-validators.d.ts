@@ -15,3 +15,5 @@ export type CustomJsonError =
     {error: string, error_message: string}
     | {error: string, error_message: string, error_metadata: {}};
 export declare const jsonSchemaErrorParser: (body_is: MultiResult) => CustomJsonError;
+
+export declare const jsonSchemaNamedArrayOf: (json_schema: tv4.JsonSchema, type_name?: string, type_plural?: string) => tv4.JsonSchema;
