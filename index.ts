@@ -7,8 +7,7 @@ import { toSentenceCase } from 'nodejs-utils';
 export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
     next(req.body == null ? new GenericError({
         name: 'ValidationError',
-        error: 'ValidationError',
-        error_message: 'Body required',
+        message: 'Body required',
         statusCode: 400
     }) : void 0);
 
