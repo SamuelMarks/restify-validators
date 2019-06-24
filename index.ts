@@ -1,8 +1,10 @@
-import { GenericError } from 'custom-restify-errors';
 import * as restify from 'restify';
 import { ErrorVar, JsonSchema, MultiResult, validateMultiple as tv4_validateMultiple } from 'tv4';
-import { CustomJsonError } from 'restify-validators';
-import { toSentenceCase } from 'nodejs-utils';
+
+import { toSentenceCase } from '@offscale/nodejs-utils';
+import { GenericError } from '@offscale/custom-restify-errors';
+
+import { CustomJsonError } from './index.d';
 
 export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
     next(req.body == null ? new GenericError({
