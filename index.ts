@@ -4,7 +4,8 @@ import { ErrorVar, JsonSchema, MultiResult, validateMultiple as tv4_validateMult
 import { toSentenceCase } from '@offscale/nodejs-utils';
 import { GenericError } from '@offscale/custom-restify-errors';
 
-import { CustomJsonError } from './index.d';
+import { CustomJsonError } from './interfaces.d';
+
 
 export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
     next(req.body == null ? new GenericError({
@@ -13,7 +14,7 @@ export const has_body = (req: restify.Request, res: restify.Response, next: rest
         statusCode: 400
     }) : void 0);
 
-export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError =>
+export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError | undefined =>
     body_is.valid ? void 0 : body_is.errors.length === 1 ? {
         error: 'ValidationError',
         error_message: body_is.errors[0].message
@@ -22,6 +23,7 @@ export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError =>
         error_message: 'JSON-Schema validation failed',
         error_metadata: {
             cls: 'tv4',
+            // @ts-ignore
             errors: body_is['errors'].map((error: ErrorVar) =>
                 Object.assign({
                     code: error.code,
@@ -29,8 +31,9 @@ export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError =>
                     message: error.message,
                     params: error.params,
                     schemaPath: error.schemaPath,
-                    subErrors: error.subErrors
-                }, process.env['DEBUG_LEVEL'] && parseInt(process.env['DEBUG_LEVEL'], 10) > 2 ?
+                    subErrors: error.subErrors,
+                }, process.env.hasOwnProperty('DEBUG_LEVEL')
+                && parseInt(process.env['DEBUG_LEVEL'] as unknown as string, 10) > 2 ?
                     { stack: error.stack } : {})
             ),
             missing: body_is.missing,
@@ -77,7 +80,7 @@ export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[
 };
 
 export const jsonSchemaNamedArrayOf = (json_schema: tv4.JsonSchema, type_name?: string, type_plural?: string): tv4.JsonSchema => {
-    type_name = type_name || json_schema.title.toString();
+    type_name = type_name || json_schema.title == null ? 'UnknownType' : json_schema.title.toString();
     const upper_of_type = toSentenceCase(type_name);
     const upper_of_types = toSentenceCase(type_plural || `${type_name}s`);
     const lower_types = upper_of_types.toLocaleLowerCase();
