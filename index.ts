@@ -3,6 +3,7 @@ import { ErrorVar, JsonSchema, MultiResult, validateMultiple as tv4_validateMult
 
 import { toSentenceCase } from '@offscale/nodejs-utils';
 import { GenericError } from '@offscale/custom-restify-errors';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { CustomJsonError } from './interfaces.d';
 
@@ -42,7 +43,7 @@ export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError | u
     };
 
 export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
-    /*valid_body*/ (req: restify.Request, res: restify.Response, next: restify.Next) => {
+    /*valid_body*/ (request: restify.Request, res: restify.Response, next: restify.Next) => {const req = request as unknown as IOrmReq & restify.Request;
     const body_is = tv4_validateMultiple(req.body, json_schema);
     if (!body_is.valid)
         (error => to_res ? res.json(400, error) && next(false) : req['json_schema_error'] = error)(
@@ -110,7 +111,7 @@ export const jsonSchemaNamedArrayOf = (json_schema: tv4.JsonSchema, type_name?: 
 };
 
 export const remove_from_body = (keys: string[]) =>
-    (req: restify.Request, res: restify.Response, next: restify.Next) => {
+    (request: restify.Request, res: restify.Response, next: restify.Next) => {const req = request as unknown as IOrmReq & restify.Request;
         keys.map(key => req.body && req.body[key] ? delete req.body[key] : null);
         return next();
     };
