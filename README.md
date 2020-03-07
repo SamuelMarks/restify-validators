@@ -1,13 +1,13 @@
 restify-validators
 ==================
+[![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![npm](https://img.shields.io/npm/v/@offscale/restify-validators)
 
 Custom validators for the Node.JS restify framework.
 
-If using TypeScript, install `typings` with:
+## Install
 
-    typings install github:SamuelMarks/restify-validators/restify-validators.d.ts --save
-
-Otherwise just use the [restify-validators-dist](https://github.com/SamuelMarks/restify-validators-dist) compiled output.
+    npm i -S @offscale/restify-validators
 
 ## Miscellaneous
 
@@ -20,6 +20,7 @@ Or simply:
 
     cp {*.md,*.js*} ../restify-validators-dist
 
+---
 
 ## License
 
