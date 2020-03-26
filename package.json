@@ -1,6 +1,6 @@
 {
   "name": "@offscale/restify-validators",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Custom validators for the Node.JS restify framework.",
   "homepage": "https://github.com/SamuelMarks/restify-validators#readme",
   "bugs": {

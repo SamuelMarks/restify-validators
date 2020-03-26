@@ -2,6 +2,8 @@ restify-validators
 ==================
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![npm](https://img.shields.io/npm/v/@offscale/restify-validators)
+![David dependency status for latest release](https://david-dm.org/SamuelMarks/restify-validators.svg)
+![npm-publish](https://github.com/SamuelMarks/restify-validators/workflows/npm-publish/badge.svg)
 
 Custom validators for the Node.JS restify framework.
 
