@@ -7,7 +7,6 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { CustomJsonError } from './interfaces.d';
 
-
 export const has_body = (req: restify.Request, res: restify.Response, next: restify.Next) =>
     next(req.body == null ? new GenericError({
         name: 'ValidationError',
@@ -43,7 +42,8 @@ export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError | u
     };
 
 export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
-    /*valid_body*/ (request: restify.Request, res: restify.Response, next: restify.Next) => {const req = request as unknown as IOrmReq & restify.Request;
+    /*valid_body*/ (request: restify.Request, res: restify.Response, next: restify.Next) => {
+    const req = request as unknown as IOrmReq & restify.Request;
     const body_is = tv4_validateMultiple(req.body, json_schema);
     if (!body_is.valid)
         (error => to_res ? res.json(400, error) && next(false) : req['json_schema_error'] = error)(
@@ -80,7 +80,8 @@ export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[
     };
 };
 
-export const jsonSchemaNamedArrayOf = (json_schema: tv4.JsonSchema, type_name?: string, type_plural?: string): tv4.JsonSchema => {
+export const jsonSchemaNamedArrayOf = (json_schema: tv4.JsonSchema, type_name?: string,
+                                       type_plural?: string): tv4.JsonSchema => {
     type_name = type_name || json_schema.title == null ? 'UnknownType' : json_schema.title.toString();
     const upper_of_type = toSentenceCase(type_name);
     const upper_of_types = toSentenceCase(type_plural || `${type_name}s`);
@@ -111,7 +112,8 @@ export const jsonSchemaNamedArrayOf = (json_schema: tv4.JsonSchema, type_name?: 
 };
 
 export const remove_from_body = (keys: string[]) =>
-    (request: restify.Request, res: restify.Response, next: restify.Next) => {const req = request as unknown as IOrmReq & restify.Request;
+    (request: restify.Request, res: restify.Response, next: restify.Next) => {
+        const req = request as unknown as IOrmReq & restify.Request;
         keys.map(key => req.body && req.body[key] ? delete req.body[key] : null);
         return next();
     };
