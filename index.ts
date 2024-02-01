@@ -43,7 +43,7 @@ export const jsonSchemaErrorParser = (body_is: MultiResult): CustomJsonError | u
 
 export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
     /*valid_body*/ (request: restify.Request, res: restify.Response, next: restify.Next) => {
-    const req = request as unknown as IOrmReq & restify.Request;
+    const req = request as unknown as IOrmReq & restify.Request & { [key: string]: CustomJsonError | undefined };
     const body_is = tv4_validateMultiple(req.body, json_schema);
     if (!body_is.valid)
         (error => to_res ? res.json(400, error) && next(false) : req['json_schema_error'] = error)(
@@ -53,7 +53,8 @@ export const mk_valid_body_mw = (json_schema: JsonSchema, to_res = true) =>
 };
 
 export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[]) => {
-    return function valid_body(req: restify.Request, res: restify.Response, next: restify.Next) {
+    return function valid_body(_req: restify.Request, res: restify.Response, next: restify.Next) {
+        const req = _req as typeof _req & { [key: string]: any };
         if (!req['json_schema_error']) return next();
         ignore.map(filter => {
                 switch (true) {
@@ -62,8 +63,8 @@ export const mk_valid_body_mw_ignore = (json_schema: JsonSchema, ignore: string[
                         break;
                     case req['json_schema_error'].error_message === 'JSON-Schema validation failed':
                         req['json_schema_error'].error_metadata.errors =
-                            req['json_schema_error'].error_metadata.errors.filter(error =>
-                                error.message.substr(0, filter.length) !== filter
+                            req['json_schema_error'].error_metadata.errors.filter((error: Error) =>
+                                error.message.substring(0, filter.length) !== filter
                             );
                         break;
                     default: /* tslint:disable:no-console */
